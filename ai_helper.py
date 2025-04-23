@@ -8,8 +8,8 @@ MODEL = "gpt-4o"
 
 class AIHelper:
     def __init__(self):
-        #self.client = OpenAI(api_key=os.environ.get("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"))
-        self.client = OpenAI(api_key="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")
+        #self.client = OpenAI(api_key=os.environ.get("-------------------------------------"))
+        self.client = OpenAI(api_key="------------------------------------------")
 
     def get_mood_response(self, mood_score, notes):
         try:
