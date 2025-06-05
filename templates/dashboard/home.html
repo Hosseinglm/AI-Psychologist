@@ -1,0 +1,327 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Dashboard - AI Psychologist{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Main Content -->
+    <div class="col-lg-8">
+        <!-- Welcome Section -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="card-title">
+                    <i class="fas fa-sun text-warning me-2"></i>
+                    Welcome back, {{ user.first_name|default:user.username }}!
+                </h2>
+                <p class="card-text text-muted">
+                    How are you feeling today? Track your mood and get personalized insights.
+                </p>
+            </div>
+        </div>
+
+        <!-- Quick Mood Entry -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-smile me-2"></i>Quick Mood Check
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="quick-mood-form">
+                    <div class="mb-3">
+                        <label for="mood-slider" class="form-label">How are you feeling right now?</label>
+                        <div class="d-flex justify-content-between mb-2">
+                            <small class="text-muted">Very Low</small>
+                            <small class="text-muted">Excellent</small>
+                        </div>
+                        <input type="range" class="form-range" id="mood-slider" name="mood_score" 
+                               min="1" max="5" step="0.1" value="3">
+                        <div class="text-center mt-2">
+                            <span id="mood-value" class="badge bg-primary fs-6">3.0</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="mood-notes" class="form-label">Notes (optional)</label>
+                        <textarea class="form-control" id="mood-notes" name="notes" rows="3"
+                                  placeholder="What's on your mind?"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Save Mood Entry
+                    </button>
+                </form>
+                
+                <!-- AI Response Area -->
+                <div id="ai-response" class="mt-4" style="display: none;">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-robot me-1"></i>AI Insight</h6>
+                        <div id="ai-message"></div>
+                        <div id="ai-suggestions" class="mt-2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Mood Response from Session -->
+        {% if ai_mood_response %}
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-robot me-2"></i>AI Analysis of Your Last Mood Entry
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>{{ ai_mood_response.message }}</p>
+                {% if ai_mood_response.suggestions %}
+                <div class="mt-3">
+                    <h6>Suggestions:</h6>
+                    <ul class="list-unstyled">
+                        {% for suggestion in ai_mood_response.suggestions %}
+                        <li><i class="fas fa-lightbulb text-warning me-1"></i>{{ suggestion }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Mood Chart -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Your Mood Trend
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="mood-chart" style="height: 400px;"></div>
+                <div class="text-center mt-3">
+                    <button class="btn btn-outline-primary btn-sm" onclick="loadMoodChart(7)">7 Days</button>
+                    <button class="btn btn-outline-primary btn-sm" onclick="loadMoodChart(30)">30 Days</button>
+                    <button class="btn btn-outline-primary btn-sm" onclick="loadMoodChart(90)">90 Days</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Mood Entries -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>Recent Entries
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_moods %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Mood</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mood in recent_moods %}
+                            <tr>
+                                <td>{{ mood.created_at|date:"M d, Y g:i A" }}</td>
+                                <td>
+                                    <span class="mood-score 
+                                        {% if mood.mood_score <= 1.5 %}mood-very-low
+                                        {% elif mood.mood_score <= 2.5 %}mood-low
+                                        {% elif mood.mood_score <= 3.5 %}mood-neutral
+                                        {% elif mood.mood_score <= 4.5 %}mood-good
+                                        {% else %}mood-excellent{% endif %}">
+                                        {{ mood.mood_score }}
+                                    </span>
+                                </td>
+                                <td>{{ mood.notes|default:"No notes"|truncatewords:10 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center">
+                    <a href="{% url 'mood_tracking:history' %}" class="btn btn-outline-primary">
+                        View All Entries
+                    </a>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-chart-line text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">No mood entries yet. Start tracking your mood above!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Statistics -->
+        <div class="sidebar mb-4">
+            <h5 class="mb-3">
+                <i class="fas fa-chart-bar me-2"></i>Your Stats
+            </h5>
+            
+            <div class="stat-card primary">
+                <div class="h3 mb-1">{{ mood_stats.total_entries }}</div>
+                <div>Total Entries</div>
+            </div>
+            
+            <div class="stat-card success">
+                <div class="h3 mb-1">{{ mood_stats.average_mood|floatformat:1 }}</div>
+                <div>Average Mood (30 days)</div>
+            </div>
+            
+            <div class="stat-card info">
+                <div class="h4 mb-1">
+                    {% if mood_stats.mood_trend == 'improving' %}
+                        <i class="fas fa-arrow-up"></i> Improving
+                    {% elif mood_stats.mood_trend == 'declining' %}
+                        <i class="fas fa-arrow-down"></i> Declining
+                    {% else %}
+                        <i class="fas fa-minus"></i> Stable
+                    {% endif %}
+                </div>
+                <div>Mood Trend</div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="sidebar">
+            <h5 class="mb-3">
+                <i class="fas fa-lightning-bolt me-2"></i>Quick Actions
+            </h5>
+            
+            <div class="d-grid gap-2">
+                <a href="{% url 'mood_tracking:add_mood' %}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle me-1"></i>Add Detailed Mood Entry
+                </a>
+                <a href="{% url 'chat:chat' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-comments me-1"></i>Chat with AI
+                </a>
+                <a href="{% url 'mood_tracking:history' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-history me-1"></i>View History
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Mood slider functionality
+document.getElementById('mood-slider').addEventListener('input', function() {
+    document.getElementById('mood-value').textContent = parseFloat(this.value).toFixed(1);
+});
+
+// Quick mood form submission
+document.getElementById('quick-mood-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        mood_score: document.getElementById('mood-slider').value,
+        notes: document.getElementById('mood-notes').value
+    };
+    
+    fetch('{% url "dashboard:quick_mood_entry" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show AI response
+            if (data.ai_response) {
+                document.getElementById('ai-message').textContent = data.ai_response.message;
+                
+                if (data.ai_response.suggestions) {
+                    const suggestionsHtml = data.ai_response.suggestions
+                        .map(s => `<span class="badge bg-light text-dark me-1">${s}</span>`)
+                        .join('');
+                    document.getElementById('ai-suggestions').innerHTML = suggestionsHtml;
+                }
+                
+                document.getElementById('ai-response').style.display = 'block';
+            }
+            
+            // Reset form
+            document.getElementById('mood-slider').value = 3;
+            document.getElementById('mood-value').textContent = '3.0';
+            document.getElementById('mood-notes').value = '';
+            
+            // Refresh chart
+            loadMoodChart(30);
+            
+            // Show success message
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                ${data.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.container.my-4').insertBefore(alertDiv, document.querySelector('.row'));
+            
+            // Auto-dismiss after 3 seconds
+            setTimeout(() => alertDiv.remove(), 3000);
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while saving your mood entry.');
+    });
+});
+
+// Load mood chart
+function loadMoodChart(days = 30) {
+    fetch(`{% url "dashboard:mood_chart_data" %}?days=${days}`)
+    .then(response => response.json())
+    .then(data => {
+        const trace = {
+            x: data.dates,
+            y: data.scores,
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Mood Score',
+            line: {color: '#4A90E2', width: 3},
+            marker: {size: 8, color: '#4A90E2'}
+        };
+        
+        const layout = {
+            title: `Mood Trend (Last ${days} days)`,
+            xaxis: {title: 'Date'},
+            yaxis: {
+                title: 'Mood Score',
+                range: [0.5, 5.5],
+                tickmode: 'array',
+                tickvals: [1, 2, 3, 4, 5],
+                ticktext: ['Very Low', 'Low', 'Neutral', 'Good', 'Excellent']
+            },
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: {family: 'Segoe UI, sans-serif'}
+        };
+        
+        Plotly.newPlot('mood-chart', [trace], layout, {responsive: true});
+    })
+    .catch(error => {
+        console.error('Error loading chart:', error);
+        document.getElementById('mood-chart').innerHTML = 
+            '<div class="text-center py-5"><p class="text-muted">Error loading chart data</p></div>';
+    });
+}
+
+// Load initial chart
+document.addEventListener('DOMContentLoaded', function() {
+    loadMoodChart(30);
+});
+</script>
+{% endblock %}

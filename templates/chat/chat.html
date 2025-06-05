@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Chat - AI Psychologist{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-robot me-2 text-primary"></i>
+                    Chat with Your AI Psychologist
+                </h3>
+                <p class="text-muted mb-0">I'm here to listen and support you</p>
+            </div>
+            <div class="card-body">
+                <!-- Chat Container -->
+                <div id="chat-container" class="chat-container mb-3">
+                    {% for chat in chat_history %}
+                    <div class="message user">
+                        <div class="mb-1">
+                            <strong><i class="fas fa-user me-1"></i>You</strong>
+                            <small class="text-muted ms-2">{{ chat.created_at|date:"M d, g:i A" }}</small>
+                        </div>
+                        <div>{{ chat.message }}</div>
+                    </div>
+                    <div class="message ai">
+                        <div class="mb-1">
+                            <strong><i class="fas fa-robot me-1"></i>AI Psychologist</strong>
+                        </div>
+                        <div>{{ chat.response }}</div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-comments text-muted" style="font-size: 3rem;"></i>
+                        <h5 class="text-muted mt-3">Start Your Conversation</h5>
+                        <p class="text-muted">Feel free to share what's on your mind. I'm here to listen and support you.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Message Input -->
+                <form id="chat-form" class="d-flex gap-2">
+                    <input type="text" id="message-input" class="form-control" 
+                           placeholder="Type your message here..." required>
+                    <button type="submit" class="btn btn-primary" id="send-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+                
+                <!-- Typing Indicator -->
+                <div id="typing-indicator" class="message ai mt-3" style="display: none;">
+                    <div class="mb-1">
+                        <strong><i class="fas fa-robot me-1"></i>AI Psychologist</strong>
+                    </div>
+                    <div class="typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Suggestions -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Conversation Starters
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <button class="btn btn-outline-primary w-100 suggestion-btn" 
+                                data-message="I'm feeling anxious today and not sure why.">
+                            <i class="fas fa-heart me-1"></i>
+                            I'm feeling anxious...
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <button class="btn btn-outline-primary w-100 suggestion-btn" 
+                                data-message="I had a difficult day at work and need to talk about it.">
+                            <i class="fas fa-briefcase me-1"></i>
+                            Work stress...
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <button class="btn btn-outline-primary w-100 suggestion-btn" 
+                                data-message="I'm having trouble sleeping and it's affecting my mood.">
+                            <i class="fas fa-moon me-1"></i>
+                            Sleep issues...
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <button class="btn btn-outline-primary w-100 suggestion-btn" 
+                                data-message="I want to talk about my relationships and how they're affecting me.">
+                            <i class="fas fa-users me-1"></i>
+                            Relationships...
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.typing-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.typing-dots span {
+    height: 8px;
+    width: 8px;
+    background-color: #6c757d;
+    border-radius: 50%;
+    display: inline-block;
+    animation: typing-animation 1.4s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+.typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typing-animation {
+    0%, 80%, 100% {
+        transform: scale(0);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.suggestion-btn {
+    transition: all 0.2s;
+}
+
+.suggestion-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const chatContainer = document.getElementById('chat-container');
+const messageInput = document.getElementById('message-input');
+const sendBtn = document.getElementById('send-btn');
+const typingIndicator = document.getElementById('typing-indicator');
+const chatForm = document.getElementById('chat-form');
+
+// Auto-scroll to bottom
+function scrollToBottom() {
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+// Add message to chat
+function addMessage(message, isUser = true, timestamp = null) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
+    
+    const timeStr = timestamp ? new Date(timestamp).toLocaleString() : new Date().toLocaleString();
+    
+    messageDiv.innerHTML = `
+        <div class="mb-1">
+            <strong>
+                <i class="fas fa-${isUser ? 'user' : 'robot'} me-1"></i>
+                ${isUser ? 'You' : 'AI Psychologist'}
+            </strong>
+            <small class="text-muted ms-2">${timeStr}</small>
+        </div>
+        <div>${message}</div>
+    `;
+    
+    chatContainer.appendChild(messageDiv);
+    scrollToBottom();
+}
+
+// Show/hide typing indicator
+function showTyping() {
+    typingIndicator.style.display = 'block';
+    scrollToBottom();
+}
+
+function hideTyping() {
+    typingIndicator.style.display = 'none';
+}
+
+// Send message
+function sendMessage(message) {
+    if (!message.trim()) return;
+    
+    // Add user message
+    addMessage(message, true);
+    
+    // Show typing indicator
+    showTyping();
+    
+    // Disable input
+    messageInput.disabled = true;
+    sendBtn.disabled = true;
+    
+    // Send to server
+    fetch('{% url "chat:send_message" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({message: message})
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideTyping();
+        
+        if (data.success) {
+            addMessage(data.response, false, data.timestamp);
+        } else {
+            addMessage('Sorry, I encountered an error. Please try again.', false);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        hideTyping();
+        addMessage('Sorry, I encountered an error. Please try again.', false);
+    })
+    .finally(() => {
+        // Re-enable input
+        messageInput.disabled = false;
+        sendBtn.disabled = false;
+        messageInput.focus();
+    });
+}
+
+// Form submission
+chatForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const message = messageInput.value.trim();
+    if (message) {
+        sendMessage(message);
+        messageInput.value = '';
+    }
+});
+
+// Suggestion buttons
+document.querySelectorAll('.suggestion-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const message = this.dataset.message;
+        messageInput.value = message;
+        messageInput.focus();
+    });
+});
+
+// Auto-focus on input
+messageInput.focus();
+
+// Initial scroll to bottom
+document.addEventListener('DOMContentLoaded', function() {
+    scrollToBottom();
+});
+
+// Enter key to send (Shift+Enter for new line)
+messageInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        chatForm.dispatchEvent(new Event('submit'));
+    }
+});
+</script>
+{% endblock %}

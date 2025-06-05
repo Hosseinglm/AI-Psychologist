@@ -1,4 +1,8 @@
+Django>=5.0.0
 openai>=1.59.3
 pandas>=2.2.3
 plotly>=5.24.1
-streamlit>=1.41.1
+python-dotenv>=1.0.0
+django-crispy-forms>=2.0
+crispy-bootstrap5>=0.7
+whitenoise>=6.6.0

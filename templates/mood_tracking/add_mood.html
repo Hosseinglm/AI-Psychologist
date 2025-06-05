@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Add Mood Entry - AI Psychologist{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-smile me-2 text-primary"></i>
+                    How Are You Feeling?
+                </h3>
+                <p class="text-muted mb-0">Take a moment to reflect on your current mood</p>
+            </div>
+            <div class="card-body">
+                <form method="post" id="mood-form">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save Mood Entry
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{% url 'dashboard:home' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Mood slider functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const moodSlider = document.getElementById('mood-slider');
+    const moodValue = document.getElementById('mood-value');
+    
+    if (moodSlider && moodValue) {
+        moodSlider.addEventListener('input', function() {
+            moodValue.textContent = parseFloat(this.value).toFixed(1);
+        });
+    }
+});
+</script>
+{% endblock %}

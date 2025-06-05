@@ -1,0 +1,50 @@
+Watching for file changes with StatReloader
+/var/www/AI-Psychologist/ai_psychologist/settings.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+"GET / HTTP/1.1" 302 0
+"GET /dashboard/ HTTP/1.1" 302 0
+"GET /accounts/login/?next=/dashboard/ HTTP/1.1" 200 8158
+Not Found: /favicon.ico
+"GET /favicon.ico HTTP/1.1" 404 2961
+"POST /accounts/login/?next=/dashboard/ HTTP/1.1" 302 0
+"GET /dashboard/ HTTP/1.1" 200 16541
+"GET /dashboard/api/mood-chart-data/?days=30 HTTP/1.1" 200 41
+"POST /dashboard/api/quick-mood/ HTTP/1.1" 200 278
+"GET /dashboard/api/mood-chart-data/?days=30 HTTP/1.1" 200 67
+"POST /dashboard/api/quick-mood/ HTTP/1.1" 200 278
+"GET /dashboard/api/mood-chart-data/?days=30 HTTP/1.1" 200 93
+"GET /dashboard/api/mood-chart-data/?days=7 HTTP/1.1" 200 93
+"GET /dashboard/api/mood-chart-data/?days=7 HTTP/1.1" 200 93
+"GET /mood/add/ HTTP/1.1" 200 9261
+"GET /dashboard/ HTTP/1.1" 200 18029
+"GET /dashboard/api/mood-chart-data/?days=30 HTTP/1.1" 200 93
+"GET /chat/ HTTP/1.1" 200 14986
+"POST /chat/send/ HTTP/1.1" 200 149
+"POST /chat/send/ HTTP/1.1" 200 149
+"POST /chat/send/ HTTP/1.1" 200 149
+"GET /chat/ HTTP/1.1" 200 16791
+"GET /mood/history/ HTTP/1.1" 200 12904
+"GET /mood/api/data/?days=30 HTTP/1.1" 200 201
+"GET /mood/add/ HTTP/1.1" 200 9261
+"GET /dashboard/ HTTP/1.1" 200 18029
+"GET /dashboard/api/mood-chart-data/?days=30 HTTP/1.1" 200 93
+/var/www/AI-Psychologist/mood_tracking/services.py changed, reloading.
+Watching for file changes with StatReloader
+"GET / HTTP/1.1" 302 0
+Session data corrupted
+"GET /dashboard/ HTTP/1.1" 302 0
+Session data corrupted
+"GET /accounts/login/?next=/dashboard/ HTTP/1.1" 200 8158
+Session data corrupted
+"POST /accounts/login/?next=/dashboard/ HTTP/1.1" 302 0
+"GET /dashboard/ HTTP/1.1" 200 18029
+"GET /dashboard/api/mood-chart-data/?days=30 HTTP/1.1" 200 93
+"GET /chat/ HTTP/1.1" 200 16791
+/var/www/AI-Psychologist/mood_tracking/services.py changed, reloading.
+Watching for file changes with StatReloader
+"POST /chat/send/ HTTP/1.1" 200 208
+/var/www/AI-Psychologist/mood_tracking/services.py changed, reloading.
+Watching for file changes with StatReloader
+/var/www/AI-Psychologist/chat/urls.py changed, reloading.
+Watching for file changes with StatReloader

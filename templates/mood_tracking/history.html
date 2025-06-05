@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block title %}Mood History - AI Psychologist{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">
+                    <i class="fas fa-history me-2 text-primary"></i>
+                    Your Mood History
+                </h3>
+                <a href="{% url 'mood_tracking:add_mood' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Add Entry
+                </a>
+            </div>
+            <div class="card-body">
+                {% if mood_entries %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Mood Score</th>
+                                <th>Mood Level</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mood in mood_entries %}
+                            <tr>
+                                <td>{{ mood.created_at|date:"M d, Y g:i A" }}</td>
+                                <td>
+                                    <span class="mood-score 
+                                        {% if mood.mood_score <= 1.5 %}mood-very-low
+                                        {% elif mood.mood_score <= 2.5 %}mood-low
+                                        {% elif mood.mood_score <= 3.5 %}mood-neutral
+                                        {% elif mood.mood_score <= 4.5 %}mood-good
+                                        {% else %}mood-excellent{% endif %}">
+                                        {{ mood.mood_score }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {% if mood.mood_score <= 1.5 %}bg-danger
+                                        {% elif mood.mood_score <= 2.5 %}bg-warning
+                                        {% elif mood.mood_score <= 3.5 %}bg-secondary
+                                        {% elif mood.mood_score <= 4.5 %}bg-info
+                                        {% else %}bg-success{% endif %}">
+                                        {% if mood.mood_score <= 1.5 %}Very Low
+                                        {% elif mood.mood_score <= 2.5 %}Low
+                                        {% elif mood.mood_score <= 3.5 %}Neutral
+                                        {% elif mood.mood_score <= 4.5 %}Good
+                                        {% else %}Excellent{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if mood.notes %}
+                                        {{ mood.notes|truncatewords:15 }}
+                                        {% if mood.notes|length > 100 %}
+                                            <button class="btn btn-sm btn-outline-info ms-1" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#notesModal{{ mood.id }}">
+                                                <i class="fas fa-expand-alt"></i>
+                                            </button>
+                                            
+                                            <!-- Notes Modal -->
+                                            <div class="modal fade" id="notesModal{{ mood.id }}" tabindex="-1">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Notes from {{ mood.created_at|date:"M d, Y" }}</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            {{ mood.notes }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">No notes</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <nav aria-label="Mood history pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                            </li>
+                        {% endif %}
+                        
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-line text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="text-muted mt-3">No mood entries yet</h4>
+                    <p class="text-muted">Start your mental wellness journey by tracking your first mood!</p>
+                    <a href="{% url 'mood_tracking:add_mood' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Add Your First Entry
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Visualization Card -->
+        {% if mood_entries %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-area me-2"></i>Mood Visualization
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="mood-chart" style="height: 400px;"></div>
+                <div class="text-center mt-3">
+                    <button class="btn btn-outline-primary btn-sm" onclick="loadChart(7)">7 Days</button>
+                    <button class="btn btn-outline-primary btn-sm" onclick="loadChart(30)">30 Days</button>
+                    <button class="btn btn-outline-primary btn-sm" onclick="loadChart(90)">90 Days</button>
+                    <button class="btn btn-outline-primary btn-sm" onclick="loadChart(365)">1 Year</button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if mood_entries %}
+<script>
+function loadChart(days) {
+    fetch(`{% url "mood_tracking:mood_data_api" %}?days=${days}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.mood_history && data.mood_history.length > 0) {
+            const dates = data.mood_history.map(entry => entry.created_at.split('T')[0]);
+            const scores = data.mood_history.map(entry => entry.mood_score);
+            
+            const trace = {
+                x: dates,
+                y: scores,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Mood Score',
+                line: {color: '#4A90E2', width: 3},
+                marker: {size: 8, color: '#4A90E2'}
+            };
+            
+            const layout = {
+                title: `Mood Trend (Last ${days} days)`,
+                xaxis: {title: 'Date'},
+                yaxis: {
+                    title: 'Mood Score',
+                    range: [0.5, 5.5],
+                    tickmode: 'array',
+                    tickvals: [1, 2, 3, 4, 5],
+                    ticktext: ['Very Low', 'Low', 'Neutral', 'Good', 'Excellent']
+                },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: {family: 'Segoe UI, sans-serif'}
+            };
+            
+            Plotly.newPlot('mood-chart', [trace], layout, {responsive: true});
+        } else {
+            document.getElementById('mood-chart').innerHTML = 
+                '<div class="text-center py-5"><p class="text-muted">No data for selected period</p></div>';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('mood-chart').innerHTML = 
+            '<div class="text-center py-5"><p class="text-muted">Error loading chart</p></div>';
+    });
+}
+
+// Load initial chart
+document.addEventListener('DOMContentLoaded', function() {
+    loadChart(30);
+});
+</script>
+{% endif %}
+{% endblock %}
