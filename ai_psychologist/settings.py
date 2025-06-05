@@ -30,7 +30,24 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-your-secret-key-here')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = ['aipsychologist.hprojects.dev','localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['aipsychologist.hprojects.dev', 'localhost', '127.0.0.1']
+
+# CSRF Trusted Origins for production
+CSRF_TRUSTED_ORIGINS = [
+    'https://aipsychologist.hprojects.dev',
+    'http://localhost:8002',
+    'http://127.0.0.1:8002',
+]
+
+# Security settings for production
+if not DEBUG:
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 
 # Application definition
